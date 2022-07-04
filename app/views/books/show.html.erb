@@ -1,12 +1,11 @@
 <div class="float-right">
   <% if user_signed_in? && current_user.admin? %>
-    <ul class="navbar-nav ms-auto">
-      <li><%= link_to "Edit", edit_book_path(@book) %></li>
-      <li><%= link_to "Destroy", book_path(@book), data: {
+      <%= link_to "Edit", edit_book_path(@book) %>
+      <%= link_to "Destroy", book_path(@book), data: {
         turbo_method: :delete,
         turbo_confirm: "Are you sure?"
-      }, class: "text-danger"%></li>
-    </ul>
+      }, class: "text-danger"%>
+
   <% else %>
     <strong>Favorite:</strong>
 
@@ -66,7 +65,32 @@
       <% end %>
     <% end %>
   <% end %>
-<% end %>
+
 <br>
+
+  <div class="card-title d-flex justify-content-between ">
+  <div>
+    <% Rating.all.each do |rating| %>
+      <% if current_user.already_rating?(@book) && rating.id == RatingBook.find_by(book_id: @book.id, user_id: current_user.id).rating_id %>
+        <%= link_to rating.title, { controller: 'rating_books', action: "destroy", id: @book, rating_id: rating.id }, remote: true, method: :delete, class: "btn btn-success" %><br>
+      <% else %>
+        <%= link_to rating.title, { controller: 'rating_books', action: "create", id: @book, rating_id: rating.id }, remote: true, method: :post, class: "btn btn-primary" %><br>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>
+
+<% counter = 1 %>
+<% votes = Hash.new %>
+<% rating = RatingBook.all.where(book_id: @book.id) %>
+
+<% Rating.all.each do |vote| %>
+  <% votes[vote.title] = rating.all.where(rating_id: counter).count %>
+  <% counter += 1 %>
+<% end %>
+
+<%= pie_chart votes %>
+</div>
+
 <%= link_to "Back to books", root_path %>
 
